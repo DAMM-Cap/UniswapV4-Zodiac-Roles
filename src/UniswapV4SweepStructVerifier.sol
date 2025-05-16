@@ -6,7 +6,7 @@ import {ICustomCondition} from "./interfaces/ICustomCondition.sol";
 import {IModifier} from "./interfaces/IModifier.sol";
 import "./Lib.sol";
 
-contract UniswapV4SweepPairStructVerifier is ICustomCondition {
+contract UniswapV4SweepStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 

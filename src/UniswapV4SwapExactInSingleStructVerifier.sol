@@ -5,6 +5,7 @@ import {CalldataDecoder} from "@univ4-periphery/src/libraries/CalldataDecoder.so
 import {ICustomCondition} from "./interfaces/ICustomCondition.sol";
 import {IV4Router} from "@univ4-periphery/src/interfaces/IV4Router.sol";
 import "./Lib.sol";
+import "@forge-std/console2.sol";
 
 contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
