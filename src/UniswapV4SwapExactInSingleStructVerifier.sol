@@ -5,7 +5,6 @@ import {CalldataDecoder} from "@univ4-periphery/src/libraries/CalldataDecoder.so
 import {ICustomCondition} from "./interfaces/ICustomCondition.sol";
 import {IV4Router} from "@univ4-periphery/src/interfaces/IV4Router.sol";
 import "./Lib.sol";
-import "@forge-std/console2.sol";
 
 contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
@@ -18,11 +17,12 @@ contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
         uint256,
         bytes calldata data,
         uint8, // 0 = Call, 1 = DelegateCall
-        uint256,
-        uint256,
+        uint256 location,
+        uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        (IV4Router.ExactInputSingleParams calldata swapParams) = data.decodeSwapExactInSingleParams();
+        (IV4Router.ExactInputSingleParams calldata swapParams) =
+            bytes(data[location:location + size]).decodeSwapExactInSingleParams();
 
         if (!swapParams.poolKey.currency0.checkCurrency0(extraData)) {
             return (false, Lib.INVALID_CURRENCY0);

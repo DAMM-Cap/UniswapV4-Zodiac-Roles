@@ -21,12 +21,12 @@ contract UniswapV4DecreaseLiquidityStructVerifier is ICustomCondition {
         uint256,
         bytes calldata data,
         uint8, // 0 = Call, 1 = DelegateCall
-        uint256,
-        uint256,
+        uint256 location,
+        uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
         (uint256 tokenId, uint256 liquidity, uint128 amount0Min, uint128 amount1Min, bytes calldata hookData) =
-            data.decodeModifyLiquidityParams();
+            bytes(data[location:location + size]).decodeModifyLiquidityParams();
         /// check if tokenId is owned by avatar using ERC721
         if (IERC721(to).ownerOf(tokenId) != IModifier(msg.sender).avatar()) {
             return (false, Lib.INVALID_TOKEN_ID);

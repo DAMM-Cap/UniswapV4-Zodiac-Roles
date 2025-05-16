@@ -17,8 +17,8 @@ contract UniswapV4MintStructVerifier is ICustomCondition {
         uint256,
         bytes calldata data,
         uint8, // 0 = Call, 1 = DelegateCall
-        uint256,
-        uint256,
+        uint256 location,
+        uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
         (
@@ -30,7 +30,7 @@ contract UniswapV4MintStructVerifier is ICustomCondition {
             uint128 amount1Max,
             address owner,
             bytes calldata hookData
-        ) = data.decodeMintParams();
+        ) = bytes(data[location:location + size]).decodeMintParams();
 
         if (!poolKey.currency0.checkCurrency0(extraData)) {
             return (false, Lib.INVALID_CURRENCY0);

@@ -78,7 +78,7 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
             data,
             0,
             0,
-            0,
+            data.length,
             bytes12(0) // extraData not used in this verifier
         );
 
@@ -108,7 +108,7 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
             data,
             0,
             0,
-            0,
+            data.length,
             bytes12(0) // extraData not used in this verifier
         );
 

@@ -43,7 +43,9 @@ contract TestUniswapV4SwapExactInSingleStructVerifier is Test {
         bytes12 extraData = bytes12(packed);
 
         // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, abi.encode(mockExactInputParams), 0, 0, 0, extraData);
+        (bool ok, bytes32 reason) = verifier.check(
+            address(0), 0, abi.encode(mockExactInputParams), 0, 0, abi.encode(mockExactInputParams).length, extraData
+        );
 
         // Verify the results
         assertTrue(ok);

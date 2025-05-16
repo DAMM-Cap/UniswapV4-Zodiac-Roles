@@ -17,11 +17,11 @@ contract UniswapV4SweepStructVerifier is ICustomCondition {
         uint256,
         bytes calldata data,
         uint8, // 0 = Call, 1 = DelegateCall
-        uint256,
-        uint256,
+        uint256 location,
+        uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        (Currency currency, address sweepTo) = data.decodeCurrencyAndAddress();
+        (Currency currency, address sweepTo) = bytes(data[location:location + size]).decodeCurrencyAndAddress();
 
         if (!currency.checkCurrency0Or1(extraData)) {
             return (false, Lib.INVALID_CURRENCY);

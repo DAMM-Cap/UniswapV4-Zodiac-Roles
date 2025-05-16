@@ -30,7 +30,7 @@ contract TestUniswapV4SettleAllStructVerifier is Test {
         bytes12 extraData = bytes12(packed);
 
         // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, 0, extraData);
+        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
 
         // Verify the results
         assertTrue(ok);
@@ -52,7 +52,7 @@ contract TestUniswapV4SettleAllStructVerifier is Test {
         bytes12 extraData = bytes12(packed);
 
         // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, 0, extraData);
+        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
 
         // Verify the results
         assertTrue(ok);
@@ -85,7 +85,7 @@ contract TestUniswapV4SettleAllStructVerifier is Test {
         bytes12 extraData = bytes12(packed);
 
         // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, 0, extraData);
+        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
 
         // Verify the results
         assertFalse(ok);

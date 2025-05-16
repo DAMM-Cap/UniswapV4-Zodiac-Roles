@@ -76,7 +76,7 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
         MockERC721 mockERC721 = new MockERC721(_erc721Owner);
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
-        (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, 0, extraData);
+        (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, params.length, extraData);
 
         assertTrue(ok);
         assertEq(reason, bytes32(0));
@@ -111,7 +111,7 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
         MockERC721 mockERC721 = new MockERC721(address(this));
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
-        (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, 0, extraData);
+        (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, params.length, extraData);
 
         assertFalse(ok);
         assertEq(reason, Lib.INVALID_CURRENCY0);
@@ -146,7 +146,7 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
         MockERC721 mockERC721 = new MockERC721(address(this));
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
-        (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, 0, extraData);
+        (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, params.length, extraData);
 
         assertFalse(ok);
         assertEq(reason, Lib.INVALID_CURRENCY1);
@@ -169,7 +169,7 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
         uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
         bytes12 extraData = bytes12(packed);
 
-        (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, 0, extraData);
+        (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, params.length, extraData);
 
         assertFalse(ok);
         assertEq(reason, Lib.INVALID_OWNER);
