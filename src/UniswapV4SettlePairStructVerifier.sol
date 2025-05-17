@@ -20,7 +20,8 @@ contract UniswapV4SettlePairStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        (Currency currency0, Currency currency1) = bytes(data[location:location + size]).decodeCurrencyPair();
+        (Currency currency0, Currency currency1) =
+            bytes(data[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeCurrencyPair();
 
         if (!currency0.checkCurrency0(extraData)) {
             return (false, Lib.INVALID_CURRENCY0);

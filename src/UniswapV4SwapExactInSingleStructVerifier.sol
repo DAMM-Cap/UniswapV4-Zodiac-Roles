@@ -22,7 +22,7 @@ contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
         bytes12 extraData
     ) external view returns (bool, bytes32) {
         (IV4Router.ExactInputSingleParams calldata swapParams) =
-            bytes(data[location:location + size]).decodeSwapExactInSingleParams();
+            bytes(data[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeSwapExactInSingleParams();
 
         if (!swapParams.poolKey.currency0.checkCurrency0(extraData)) {
             return (false, Lib.INVALID_CURRENCY0);

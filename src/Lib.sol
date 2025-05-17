@@ -17,6 +17,8 @@ library Lib {
     /// 0x806fc2f0c528614f6371ca4d5621d8076cd90c51a2211198fdc62e3aba768436
     bytes32 constant INVALID_TOKEN_ID = keccak256("INVALID_TOKEN_ID");
 
+    uint256 constant ARRAY_LENGTH_OFFSET = 0x20;
+
     function tokenHeader(Currency currency) internal pure returns (bytes6) {
         return bytes6(bytes20(Currency.unwrap(currency)));
     }

@@ -20,7 +20,8 @@ contract UniswapV4SettleAllStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        (Currency currency, uint256 maxAmount) = bytes(data[location:location + size]).decodeCurrencyAndUint256();
+        (Currency currency, uint256 maxAmount) =
+            bytes(data[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeCurrencyAndUint256();
 
         if (!currency.checkCurrency0Or1(extraData)) {
             return (false, Lib.INVALID_CURRENCY);

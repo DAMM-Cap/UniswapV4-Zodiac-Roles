@@ -8,6 +8,7 @@ import {console2} from "@forge-std/console2.sol";
 import {Lib} from "@src/Lib.sol";
 import {Currency} from "@univ4-core/src/types/Currency.sol";
 import {CalldataDecoder} from "@univ4-periphery/src/libraries/CalldataDecoder.sol";
+import "./TestingUtils.sol";
 
 contract MockModifier is IModifier {
     address public _avatar;
@@ -28,6 +29,8 @@ contract MockModifier is IModifier {
 }
 
 contract TestUniswapV4TakePairStructVerifier is Test {
+    using TestingUtils for bytes;
+
     UniswapV4TakePairStructVerifier verifier;
     MockModifier mockModifier;
     address avatarAddress;
@@ -38,9 +41,9 @@ contract TestUniswapV4TakePairStructVerifier is Test {
         mockModifier = new MockModifier(avatarAddress, address(this));
     }
 
-    function test_take_pair_valid_parameters(Currency currency0, Currency currency1) public {
+    function test_take_pair_valid_parameters(Currency currency0, Currency currency1, uint256 dirt) public {
         // Encode the data with both currencies and the avatar as recipient
-        bytes memory data = abi.encode(currency0, currency1, avatarAddress);
+        bytes memory data = abi.encode(currency0, currency1, avatarAddress).dirtyBytes(dirt);
 
         // Generate extraData from both currencies
         bytes6 t0 = Lib.tokenHeader(currency0);
@@ -64,7 +67,8 @@ contract TestUniswapV4TakePairStructVerifier is Test {
     function test_take_pair_invalid_currency0(
         Currency validCurrency0,
         Currency validCurrency1,
-        Currency invalidCurrency0
+        Currency invalidCurrency0,
+        uint256 dirt
     ) public {
         // Ensure the currencies are different
         vm.assume(Currency.unwrap(validCurrency0) != Currency.unwrap(invalidCurrency0));
@@ -75,7 +79,7 @@ contract TestUniswapV4TakePairStructVerifier is Test {
         vm.assume(validHeader0 != invalidHeader0);
 
         // Encode the data with invalid currency0, valid currency1, and valid recipient
-        bytes memory data = abi.encode(invalidCurrency0, validCurrency1, avatarAddress);
+        bytes memory data = abi.encode(invalidCurrency0, validCurrency1, avatarAddress).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
         bytes6 t1 = Lib.tokenHeader(validCurrency1);
@@ -98,7 +102,8 @@ contract TestUniswapV4TakePairStructVerifier is Test {
     function test_take_pair_invalid_currency1(
         Currency validCurrency0,
         Currency validCurrency1,
-        Currency invalidCurrency1
+        Currency invalidCurrency1,
+        uint256 dirt
     ) public {
         // Ensure the currencies are different
         vm.assume(Currency.unwrap(validCurrency1) != Currency.unwrap(invalidCurrency1));
@@ -109,7 +114,7 @@ contract TestUniswapV4TakePairStructVerifier is Test {
         vm.assume(validHeader1 != invalidHeader1);
 
         // Encode the data with valid currency0, invalid currency1, and valid recipient
-        bytes memory data = abi.encode(validCurrency0, invalidCurrency1, avatarAddress);
+        bytes memory data = abi.encode(validCurrency0, invalidCurrency1, avatarAddress).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
         bytes6 t0 = Lib.tokenHeader(validCurrency0);
@@ -129,15 +134,18 @@ contract TestUniswapV4TakePairStructVerifier is Test {
         assertEq(reason, Lib.INVALID_CURRENCY1);
     }
 
-    function test_take_pair_invalid_recipient(Currency currency0, Currency currency1, address invalidRecipient)
-        public
-    {
+    function test_take_pair_invalid_recipient(
+        Currency currency0,
+        Currency currency1,
+        address invalidRecipient,
+        uint256 dirt
+    ) public {
         // Ensure the recipient is not the avatar
         vm.assume(invalidRecipient != avatarAddress);
         vm.assume(invalidRecipient != address(0));
 
         // Encode the data with valid currencies but invalid recipient
-        bytes memory data = abi.encode(currency0, currency1, invalidRecipient);
+        bytes memory data = abi.encode(currency0, currency1, invalidRecipient).dirtyBytes(dirt);
 
         // Generate extraData from both currencies
         bytes6 t0 = Lib.tokenHeader(currency0);
@@ -163,7 +171,8 @@ contract TestUniswapV4TakePairStructVerifier is Test {
         Currency validCurrency1,
         Currency invalidCurrency0,
         Currency invalidCurrency1,
-        address invalidRecipient
+        address invalidRecipient,
+        uint256 dirt
     ) public {
         // Set up assumptions for invalid values
         vm.assume(Currency.unwrap(validCurrency0) != Currency.unwrap(invalidCurrency0));
@@ -181,7 +190,7 @@ contract TestUniswapV4TakePairStructVerifier is Test {
         vm.assume(validHeader1 != invalidHeader1);
 
         // Encode the data with all invalid parameters
-        bytes memory data = abi.encode(invalidCurrency0, invalidCurrency1, invalidRecipient);
+        bytes memory data = abi.encode(invalidCurrency0, invalidCurrency1, invalidRecipient).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
         uint96 packed = (uint96(uint48(bytes6(validHeader0))) << 48) | uint96(uint48(bytes6(validHeader1)));

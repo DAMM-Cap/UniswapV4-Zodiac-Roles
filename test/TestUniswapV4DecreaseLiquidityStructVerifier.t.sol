@@ -7,6 +7,7 @@ import {IModifier} from "@src/interfaces/IModifier.sol";
 import {IERC721} from "@src/UniswapV4DecreaseLiquidityStructVerifier.sol";
 import {console2} from "@forge-std/console2.sol";
 import {Lib} from "@src/Lib.sol";
+import "./TestingUtils.sol";
 
 /* ─────────────────────────── mock ERC-721 ────────────────────── */
 contract MockERC721 {
@@ -40,6 +41,8 @@ contract MockModifier is IModifier {
 }
 
 contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
+    using TestingUtils for bytes;
+
     UniswapV4DecreaseLiquidityStructVerifier verifier;
     MockERC721 mockERC721;
     MockModifier mockModifier;
@@ -52,7 +55,7 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
         mockModifier = new MockModifier(avatarAddress, address(this));
     }
 
-    function test_decrease_liquidity_invalid_token_owner(address randomOwner) public {
+    function test_decrease_liquidity_invalid_token_owner(address randomOwner, uint256 dirt) public {
         vm.assume(randomOwner != avatarAddress);
         vm.assume(randomOwner != address(0));
 
@@ -66,7 +69,7 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
         uint128 amount1Min = 1200;
         bytes memory hookData = "test";
 
-        bytes memory data = abi.encode(tokenId, liquidity, amount0Min, amount1Min, hookData);
+        bytes memory data = abi.encode(tokenId, liquidity, amount0Min, amount1Min, hookData).dirtyBytes(dirt);
 
         // Use vm.prank to set msg.sender to the mock modifier
         vm.prank(address(mockModifier));
@@ -87,7 +90,7 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
         assertEq(reason, Lib.INVALID_TOKEN_ID);
     }
 
-    function test_decrease_liquidity_fuzz_token_id(uint256 tokenId, uint256 liquidity) public {
+    function test_decrease_liquidity_fuzz_token_id(uint256 tokenId, uint256 liquidity, uint256 dirt) public {
         // Setup token ownership
         mockERC721.setOwner(tokenId, avatarAddress);
 
@@ -96,7 +99,7 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
         uint128 amount1Min = 600;
         bytes memory hookData = "test";
 
-        bytes memory data = abi.encode(tokenId, liquidity, amount0Min, amount1Min, hookData);
+        bytes memory data = abi.encode(tokenId, liquidity, amount0Min, amount1Min, hookData).dirtyBytes(dirt);
 
         // Use vm.prank to set msg.sender to the mock modifier
         vm.prank(address(mockModifier));

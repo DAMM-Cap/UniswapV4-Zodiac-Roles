@@ -30,7 +30,7 @@ contract UniswapV4MintStructVerifier is ICustomCondition {
             uint128 amount1Max,
             address owner,
             bytes calldata hookData
-        ) = bytes(data[location:location + size]).decodeMintParams();
+        ) = bytes(data[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeMintParams();
 
         if (!poolKey.currency0.checkCurrency0(extraData)) {
             return (false, Lib.INVALID_CURRENCY0);

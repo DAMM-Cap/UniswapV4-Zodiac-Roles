@@ -22,7 +22,7 @@ contract UniswapV4TakePairStructVerifier is ICustomCondition {
         bytes12 extraData
     ) external view returns (bool, bytes32) {
         (Currency currency0, Currency currency1, address recipient) =
-            bytes(data[location:location + size]).decodeCurrencyPairAndAddress();
+            bytes(data[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeCurrencyPairAndAddress();
 
         if (!currency0.checkCurrency0(extraData)) {
             return (false, Lib.INVALID_CURRENCY0);

@@ -7,17 +7,20 @@ import {console2} from "@forge-std/console2.sol";
 import {Lib} from "@src/Lib.sol";
 import {Currency} from "@univ4-core/src/types/Currency.sol";
 import {CalldataDecoder} from "@univ4-periphery/src/libraries/CalldataDecoder.sol";
+import "./TestingUtils.sol";
 
 contract TestUniswapV4SettlePairStructVerifier is Test {
+    using TestingUtils for bytes;
+
     UniswapV4SettlePairStructVerifier verifier;
 
     function setUp() public {
         verifier = new UniswapV4SettlePairStructVerifier();
     }
 
-    function test_settle_pair_valid_currencies(Currency currency0, Currency currency1) public {
+    function test_settle_pair_valid_currencies(Currency currency0, Currency currency1, uint256 dirt) public {
         // Encode the data as expected by the verifier
-        bytes memory data = abi.encode(currency0, currency1);
+        bytes memory data = abi.encode(currency0, currency1).dirtyBytes(dirt);
 
         // Generate extraData from both currencies
         bytes6 t0 = Lib.tokenHeader(currency0);
@@ -38,7 +41,8 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
     function test_settle_pair_invalid_currency0(
         Currency validCurrency0,
         Currency validCurrency1,
-        Currency invalidCurrency0
+        Currency invalidCurrency0,
+        uint256 dirt
     ) public {
         // Ensure the currencies are different
         vm.assume(Currency.unwrap(validCurrency0) != Currency.unwrap(invalidCurrency0));
@@ -49,7 +53,7 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
         vm.assume(validHeader0 != invalidHeader0);
 
         // Encode the data with the invalid currency0
-        bytes memory data = abi.encode(invalidCurrency0, validCurrency1);
+        bytes memory data = abi.encode(invalidCurrency0, validCurrency1).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
         bytes6 t1 = Lib.tokenHeader(validCurrency1);
@@ -69,7 +73,8 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
     function test_settle_pair_invalid_currency1(
         Currency validCurrency0,
         Currency validCurrency1,
-        Currency invalidCurrency1
+        Currency invalidCurrency1,
+        uint256 dirt
     ) public {
         // Ensure the currencies are different
         vm.assume(Currency.unwrap(validCurrency1) != Currency.unwrap(invalidCurrency1));
@@ -80,7 +85,7 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
         vm.assume(validHeader1 != invalidHeader1);
 
         // Encode the data with the invalid currency1
-        bytes memory data = abi.encode(validCurrency0, invalidCurrency1);
+        bytes memory data = abi.encode(validCurrency0, invalidCurrency1).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
         bytes6 t0 = Lib.tokenHeader(validCurrency0);
@@ -101,7 +106,8 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
         Currency validCurrency0,
         Currency validCurrency1,
         Currency invalidCurrency0,
-        Currency invalidCurrency1
+        Currency invalidCurrency1,
+        uint256 dirt
     ) public {
         // Ensure the currencies are different
         vm.assume(Currency.unwrap(validCurrency0) != Currency.unwrap(invalidCurrency0));
@@ -117,7 +123,7 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
         vm.assume(validHeader1 != invalidHeader1);
 
         // Encode the data with both invalid currencies
-        bytes memory data = abi.encode(invalidCurrency0, invalidCurrency1);
+        bytes memory data = abi.encode(invalidCurrency0, invalidCurrency1).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
         uint96 packed = (uint96(uint48(bytes6(validHeader0))) << 48) | uint96(uint48(bytes6(validHeader1)));
