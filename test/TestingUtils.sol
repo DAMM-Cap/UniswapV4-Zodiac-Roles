@@ -4,6 +4,7 @@ pragma solidity ^0.8.23;
 import {Lib} from "@src/Lib.sol";
 import {Currency} from "@univ4-core/src/types/Currency.sol";
 import {Test, console2} from "@forge-std/Test.sol";
+import {ICustomCondition} from "@src/interfaces/ICustomCondition.sol";
 
 library TestingUtils {
     /// @dev UniswapV4 payloads are composed of bytes[]. In solidity, the first word of a bytes type is a
@@ -34,26 +35,20 @@ library TestingUtils {
     }
 }
 
-interface ICustomCondition {
-    function check(address, uint256, bytes calldata data, uint8, uint256 location, uint256 size, bytes12 extraData)
-        external
-        view
-        returns (bool, bytes32);
-}
-
 abstract contract TestUtils is Test {
-    function assertValidCheck(bool ok, bytes32 reason) internal {
+    function assertValidCheck(bool ok, bytes32 reason) internal pure {
         assertTrue(ok);
         assertEq(reason, bytes32(0));
     }
 
-    function assertInvalidCheck(bool ok, bytes32 reason, bytes32 expectedError) internal {
+    function assertInvalidCheck(bool ok, bytes32 reason, bytes32 expectedError) internal pure {
         assertFalse(ok);
         assertEq(reason, expectedError);
     }
 
     function assumeInvalidCurrency(Currency invalidCurrency, Currency validCurrency0, Currency validCurrency1)
         internal
+        pure
     {
         vm.assume(Currency.unwrap(invalidCurrency) != Currency.unwrap(validCurrency0));
         vm.assume(Currency.unwrap(invalidCurrency) != Currency.unwrap(validCurrency1));
@@ -67,7 +62,7 @@ abstract contract TestUtils is Test {
         vm.assume(invalidHeader != t1);
     }
 
-    function assumeInvalidCurrencySingle(Currency invalidCurrency, Currency validCurrency) internal {
+    function assumeInvalidCurrencySingle(Currency invalidCurrency, Currency validCurrency) internal pure {
         vm.assume(Currency.unwrap(invalidCurrency) != Currency.unwrap(validCurrency));
 
         // Further ensure the token headers are different for a robust test
@@ -76,13 +71,14 @@ abstract contract TestUtils is Test {
         vm.assume(invalidHeader != validHeader);
     }
 
-    function assumeInvalidRecipient(address invalidRecipient, address validRecipient) internal {
+    function assumeInvalidRecipient(address invalidRecipient, address validRecipient) internal pure {
         vm.assume(invalidRecipient != validRecipient);
         vm.assume(invalidRecipient != address(0));
     }
 
     function callVerifierCheck(address verifier, bytes memory data, bytes12 extraData)
         internal
+        view
         returns (bool ok, bytes32 reason)
     {
         (ok, reason) = ICustomCondition(verifier).check(address(0), 0, data, 0, 0, data.length, extraData);

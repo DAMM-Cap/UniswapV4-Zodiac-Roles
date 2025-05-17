@@ -7,7 +7,7 @@ import {console2} from "@forge-std/console2.sol";
 import {Test} from "@forge-std/Test.sol";
 
 contract LibTest is Test {
-    function test_check_currency0(Currency currency0, Currency currency1) public {
+    function test_check_currency0(Currency currency0, Currency currency1) external pure {
         bytes6 t0 = Lib.tokenHeader(currency0);
         bytes6 t1 = Lib.tokenHeader(currency1);
 
@@ -19,7 +19,7 @@ contract LibTest is Test {
         assertEq(ok, true);
     }
 
-    function test_check_currency1(Currency currency0, Currency currency1) public {
+    function test_check_currency1(Currency currency0, Currency currency1) external pure {
         bytes6 t0 = Lib.tokenHeader(currency0);
         bytes6 t1 = Lib.tokenHeader(currency1);
 
@@ -30,7 +30,7 @@ contract LibTest is Test {
         assertEq(ok, true);
     }
 
-    function test_check_currency0_or_1(Currency currency0, Currency currency1) public {
+    function test_check_currency0_or_1(Currency currency0, Currency currency1) external pure {
         bytes6 t0 = Lib.tokenHeader(currency0);
         bytes6 t1 = Lib.tokenHeader(currency1);
 
@@ -44,7 +44,7 @@ contract LibTest is Test {
         assertEq(ok, true);
     }
 
-    function test_check_currency_invalid(Currency currency0, Currency currency1) public {
+    function test_check_currency_invalid(Currency currency0, Currency currency1) external pure {
         vm.assume(Currency.unwrap(currency0) != Currency.unwrap(currency1));
 
         bytes6 t0 = Lib.tokenHeader(currency0);
