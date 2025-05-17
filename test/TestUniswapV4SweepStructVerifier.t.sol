@@ -8,7 +8,7 @@ import {console2} from "@forge-std/console2.sol";
 import {Lib} from "@src/Lib.sol";
 import {Currency} from "@univ4-core/src/types/Currency.sol";
 import {CalldataDecoder} from "@univ4-periphery/src/libraries/CalldataDecoder.sol";
-import "./TestingUtils.sol";
+import {TestingUtils, TestUtils} from "./TestingUtils.sol";
 
 contract MockModifier is IModifier {
     address public _avatar;
@@ -28,7 +28,7 @@ contract MockModifier is IModifier {
     }
 }
 
-contract TestUniswapV4SweepStructVerifier is Test {
+contract TestUniswapV4SweepStructVerifier is TestUtils {
     using TestingUtils for bytes;
 
     UniswapV4SweepStructVerifier verifier;
@@ -48,22 +48,14 @@ contract TestUniswapV4SweepStructVerifier is Test {
         bytes memory data = abi.encode(currency0, avatarAddress).dirtyBytes(dirt);
 
         // Generate extraData from both currencies
-        bytes6 t0 = Lib.tokenHeader(currency0);
-        bytes6 t1 = Lib.tokenHeader(currency1);
+        bytes12 extraData = TestingUtils.generateExtraData(currency0, currency1);
 
-        // Pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
-
-        // Use vm.prank to set msg.sender to the mock modifier
-        vm.prank(address(mockModifier));
-
-        // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
+        // Call the check function with the mock modifier
+        (bool ok, bytes32 reason) =
+            callVerifierCheckWithModifier(address(verifier), address(mockModifier), data, extraData);
 
         // Verify the results
-        assertTrue(ok);
-        assertEq(reason, bytes32(0));
+        assertValidCheck(ok, reason);
     }
 
     function test_sweep_pair_currency1_valid_recipient(Currency currency0, Currency currency1, uint256 dirt) public {
@@ -71,22 +63,14 @@ contract TestUniswapV4SweepStructVerifier is Test {
         bytes memory data = abi.encode(currency1, avatarAddress).dirtyBytes(dirt);
 
         // Generate extraData from both currencies
-        bytes6 t0 = Lib.tokenHeader(currency0);
-        bytes6 t1 = Lib.tokenHeader(currency1);
+        bytes12 extraData = TestingUtils.generateExtraData(currency0, currency1);
 
-        // Pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
-
-        // Use vm.prank to set msg.sender to the mock modifier
-        vm.prank(address(mockModifier));
-
-        // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
+        // Call the check function with the mock modifier
+        (bool ok, bytes32 reason) =
+            callVerifierCheckWithModifier(address(verifier), address(mockModifier), data, extraData);
 
         // Verify the results
-        assertTrue(ok);
-        assertEq(reason, bytes32(0));
+        assertValidCheck(ok, reason);
     }
 
     function test_sweep_pair_invalid_currency(
@@ -95,34 +79,21 @@ contract TestUniswapV4SweepStructVerifier is Test {
         Currency invalidCurrency,
         uint256 dirt
     ) public {
-        // Assume the invalid currency is different from both currency0 and currency1
-        vm.assume(Currency.unwrap(invalidCurrency) != Currency.unwrap(currency0));
-        vm.assume(Currency.unwrap(invalidCurrency) != Currency.unwrap(currency1));
-
-        // Further ensure the token headers are different for a robust test
-        bytes6 invalidHeader = Lib.tokenHeader(invalidCurrency);
-        bytes6 t0 = Lib.tokenHeader(currency0);
-        bytes6 t1 = Lib.tokenHeader(currency1);
-
-        vm.assume(invalidHeader != t0);
-        vm.assume(invalidHeader != t1);
+        // Set up assumptions for invalid currency
+        assumeInvalidCurrency(invalidCurrency, currency0, currency1);
 
         // Encode the data with the invalid currency
         bytes memory data = abi.encode(invalidCurrency, avatarAddress).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
+        bytes12 extraData = TestingUtils.generateExtraData(currency0, currency1);
 
-        // Use vm.prank to set msg.sender to the mock modifier
-        vm.prank(address(mockModifier));
-
-        // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
+        // Call the check function with the mock modifier
+        (bool ok, bytes32 reason) =
+            callVerifierCheckWithModifier(address(verifier), address(mockModifier), data, extraData);
 
         // Verify the results
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_CURRENCY);
+        assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY);
     }
 
     function test_sweep_pair_invalid_recipient(
@@ -131,30 +102,21 @@ contract TestUniswapV4SweepStructVerifier is Test {
         address invalidRecipient,
         uint256 dirt
     ) public {
-        // Ensure the recipient is not the avatar
-        vm.assume(invalidRecipient != avatarAddress);
-        vm.assume(invalidRecipient != address(0));
+        // Set up assumptions for invalid recipient
+        assumeInvalidRecipient(invalidRecipient, avatarAddress);
 
         // Encode the data with a valid currency but invalid recipient
         bytes memory data = abi.encode(currency0, invalidRecipient).dirtyBytes(dirt);
 
         // Generate extraData from both currencies
-        bytes6 t0 = Lib.tokenHeader(currency0);
-        bytes6 t1 = Lib.tokenHeader(currency1);
+        bytes12 extraData = TestingUtils.generateExtraData(currency0, currency1);
 
-        // Pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
-
-        // Use vm.prank to set msg.sender to the mock modifier
-        vm.prank(address(mockModifier));
-
-        // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
+        // Call the check function with the mock modifier
+        (bool ok, bytes32 reason) =
+            callVerifierCheckWithModifier(address(verifier), address(mockModifier), data, extraData);
 
         // Verify the results
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_RECIPIENT);
+        assertInvalidCheck(ok, reason, Lib.INVALID_RECIPIENT);
     }
 
     function test_sweep_pair_invalid_currency_and_recipient(
@@ -165,34 +127,20 @@ contract TestUniswapV4SweepStructVerifier is Test {
         uint256 dirt
     ) public {
         // Set up assumptions for invalid values
-        vm.assume(Currency.unwrap(invalidCurrency) != Currency.unwrap(currency0));
-        vm.assume(Currency.unwrap(invalidCurrency) != Currency.unwrap(currency1));
-        vm.assume(invalidRecipient != avatarAddress);
-        vm.assume(invalidRecipient != address(0));
-
-        // Further ensure the token headers are different
-        bytes6 invalidHeader = Lib.tokenHeader(invalidCurrency);
-        bytes6 t0 = Lib.tokenHeader(currency0);
-        bytes6 t1 = Lib.tokenHeader(currency1);
-
-        vm.assume(invalidHeader != t0);
-        vm.assume(invalidHeader != t1);
+        assumeInvalidCurrency(invalidCurrency, currency0, currency1);
+        assumeInvalidRecipient(invalidRecipient, avatarAddress);
 
         // Encode the data with both invalid currency and recipient
         bytes memory data = abi.encode(invalidCurrency, invalidRecipient).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
+        bytes12 extraData = TestingUtils.generateExtraData(currency0, currency1);
 
-        // Use vm.prank to set msg.sender to the mock modifier
-        vm.prank(address(mockModifier));
-
-        // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
+        // Call the check function with the mock modifier
+        (bool ok, bytes32 reason) =
+            callVerifierCheckWithModifier(address(verifier), address(mockModifier), data, extraData);
 
         // Verify the results - should fail on currency check first
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_CURRENCY);
+        assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY);
     }
 }

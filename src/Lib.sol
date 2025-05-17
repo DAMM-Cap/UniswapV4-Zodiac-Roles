@@ -25,10 +25,10 @@ library Lib {
 
     /// @dev `extraData` == abi.encodePacked(token0.header(6), token1.header(6))
     function checkCurrency(Currency currency, bytes12 extraData, bool isToken0) internal pure returns (bool ok) {
-        bytes6 tokenHeader = tokenHeader(currency);
+        bytes6 currencyHeader = tokenHeader(currency);
         bytes6 comp = isToken0 ? bytes6(extraData) : bytes6(extraData << 48);
         assembly ("memory-safe") {
-            ok := eq(tokenHeader, comp)
+            ok := eq(currencyHeader, comp)
         }
     }
 

@@ -7,7 +7,7 @@ import {IModifier} from "@src/interfaces/IModifier.sol";
 import {IERC721} from "@src/UniswapV4DecreaseLiquidityStructVerifier.sol";
 import {console2} from "@forge-std/console2.sol";
 import {Lib} from "@src/Lib.sol";
-import "./TestingUtils.sol";
+import {TestingUtils, TestUtils} from "./TestingUtils.sol";
 
 /* ─────────────────────────── mock ERC-721 ────────────────────── */
 contract MockERC721 {
@@ -40,7 +40,7 @@ contract MockModifier is IModifier {
     }
 }
 
-contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
+contract TestUniswapV4DecreaseLiquidityStructVerifier is TestUtils {
     using TestingUtils for bytes;
 
     UniswapV4DecreaseLiquidityStructVerifier verifier;
@@ -56,8 +56,8 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
     }
 
     function test_decrease_liquidity_invalid_token_owner(address randomOwner, uint256 dirt) public {
-        vm.assume(randomOwner != avatarAddress);
-        vm.assume(randomOwner != address(0));
+        // Set up assumptions for invalid recipient
+        assumeInvalidRecipient(randomOwner, avatarAddress);
 
         // Setup token ownership with random owner (not the avatar)
         uint256 tokenId = 456;
@@ -74,7 +74,7 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
         // Use vm.prank to set msg.sender to the mock modifier
         vm.prank(address(mockModifier));
 
-        // Call the check function
+        // Call the check function - note that this verifier needs mockERC721 as the first parameter
         (bool ok, bytes32 reason) = verifier.check(
             address(mockERC721),
             0,
@@ -86,8 +86,7 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
         );
 
         // Verify the results
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_TOKEN_ID);
+        assertInvalidCheck(ok, reason, Lib.INVALID_TOKEN_ID);
     }
 
     function test_decrease_liquidity_fuzz_token_id(uint256 tokenId, uint256 liquidity, uint256 dirt) public {
@@ -104,7 +103,7 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
         // Use vm.prank to set msg.sender to the mock modifier
         vm.prank(address(mockModifier));
 
-        // Call the check function
+        // Call the check function - note that this verifier needs mockERC721 as the first parameter
         (bool ok, bytes32 reason) = verifier.check(
             address(mockERC721),
             0,
@@ -116,7 +115,6 @@ contract TestUniswapV4DecreaseLiquidityStructVerifier is Test {
         );
 
         // Verify the results
-        assertTrue(ok);
-        assertEq(reason, bytes32(0));
+        assertValidCheck(ok, reason);
     }
 }
