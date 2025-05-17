@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import {CalldataDecoder} from "@univ4-periphery/src/libraries/CalldataDecoder.sol";

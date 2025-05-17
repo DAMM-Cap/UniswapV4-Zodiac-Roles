@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+/// @dev this is the interface that zodiac expects to be implemented by custom conditions
 interface ICustomCondition {
     function check(
         address to,

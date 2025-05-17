@@ -5,14 +5,13 @@ import {UniswapV4MintStructVerifier} from "@src/UniswapV4MintStructVerifier.sol"
 import {Test} from "@forge-std/Test.sol";
 import {IModifier} from "@src/interfaces/IModifier.sol";
 import {console2} from "@forge-std/console2.sol";
-import "@src/Lib.sol";
-import "./TestingUtils.sol";
+import {Lib} from "@src/Lib.sol";
+import {TestingUtils, TestUtils} from "./TestingUtils.sol";
 
-import "@univ4-core/src/types/PoolKey.sol";
-import "@univ4-core/src/types/Currency.sol"; // value-type alias --> unwrap gives address
+import {PoolKey} from "@univ4-core/src/types/PoolKey.sol";
+import {Currency} from "@univ4-core/src/types/Currency.sol"; // value-type alias --> unwrap gives address
 
-/* ─────────────────────────── mock ERC-721 ────────────────────── */
-
+// mock ERC-721
 contract MockERC721 {
     address public owner;
 
@@ -25,10 +24,10 @@ contract MockERC721 {
     }
 }
 
-contract TestUniswapV4MintStructVerifier is Test, IModifier {
+contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
     using TestingUtils for bytes;
 
-    /* ─────────── stubs to satisfy IModifier ─────────── */
+    // stubs to satisfy IModifier
     function avatar() public view returns (address) {
         return address(this);
     }
@@ -37,7 +36,7 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
         return address(this);
     }
 
-    /* ─────────── struct used by PoolManager.mint() ─────────── */
+    // struct used by PoolManager.mint()
     struct PositionConfig {
         PoolKey poolKey;
         int24 tickLower;
@@ -53,9 +52,7 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
         bytes calldata _hookData,
         uint256 _dirt
     ) public {
-        /* ------------------------------------------------------------ *
-         *  build Mint params exactly as the hook/condition expects     *
-         * ------------------------------------------------------------ */
+        // Build Mint params for the hook/condition
         bytes memory params = abi.encode(
             _config.poolKey,
             _config.tickLower,
@@ -65,26 +62,19 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
             _amount1Max,
             avatar(),
             _hookData
-        ) // owner
-            .dirtyBytes(_dirt);
+        ).dirtyBytes(_dirt);
 
-        bytes6 t0 = Lib.tokenHeader(_config.poolKey.currency0);
-        bytes6 t1 = Lib.tokenHeader(_config.poolKey.currency1);
+        // Generate extraData from both currencies
+        bytes12 extraData = TestingUtils.generateExtraData(_config.poolKey.currency0, _config.poolKey.currency1);
 
-        // pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
-
-        /* ------------------------------------------------------------ *
-         *  run the check                                               *
-         * ------------------------------------------------------------ */
+        // Run the check
         MockERC721 mockERC721 = new MockERC721(_erc721Owner);
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
+        // In this test we need to pass the mockERC721 address as the first argument
         (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, params.length, extraData);
 
-        assertTrue(ok);
-        assertEq(reason, bytes32(0));
+        assertValidCheck(ok, reason);
     }
 
     function test_mint_struct_verifier_invalid_currency0(
@@ -92,28 +82,22 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
         Currency _invalidCurrency,
         uint256 _dirt
     ) public {
-        /* ------------------------------------------------------------ *
-         *  build Mint params exactly as the hook/condition expects     *
-         * ------------------------------------------------------------ */
-        bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, avatar(), "test") // owner
-            .dirtyBytes(_dirt);
+        // Build Mint params
+        bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, avatar(), "test").dirtyBytes(_dirt);
 
-        bytes6 t0 = Lib.tokenHeader(_invalidCurrency);
-        bytes6 t1 = Lib.tokenHeader(_config.poolKey.currency1);
+        // Ensure the invalid currency is different from the valid one
+        assumeInvalidCurrencySingle(_invalidCurrency, _config.poolKey.currency0);
 
-        vm.assume(t0 != Lib.tokenHeader(_config.poolKey.currency0));
+        // Create extraData with the invalid currency
+        bytes12 extraData = TestingUtils.generateExtraData(_invalidCurrency, _config.poolKey.currency1);
 
-        // pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
-
+        // Create mockERC721 for the check
         MockERC721 mockERC721 = new MockERC721(address(this));
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
         (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, params.length, extraData);
 
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_CURRENCY0);
+        assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY0);
     }
 
     function test_mint_struct_verifier_invalid_currency1(
@@ -121,28 +105,22 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
         Currency _invalidCurrency,
         uint256 _dirt
     ) public {
-        /* ------------------------------------------------------------ *
-         *  build Mint params exactly as the hook/condition expects     *
-         * ------------------------------------------------------------ */
-        bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, avatar(), "test") // owner
-            .dirtyBytes(_dirt);
+        // Build Mint params
+        bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, avatar(), "test").dirtyBytes(_dirt);
 
-        bytes6 t0 = Lib.tokenHeader(_config.poolKey.currency0);
-        bytes6 t1 = Lib.tokenHeader(_invalidCurrency);
+        // Ensure the invalid currency is different from the valid one
+        assumeInvalidCurrencySingle(_invalidCurrency, _config.poolKey.currency1);
 
-        vm.assume(t1 != Lib.tokenHeader(_config.poolKey.currency1));
+        // Create extraData with the invalid currency
+        bytes12 extraData = TestingUtils.generateExtraData(_config.poolKey.currency0, _invalidCurrency);
 
-        // pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
-
+        // Create mockERC721 for the check
         MockERC721 mockERC721 = new MockERC721(address(this));
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
         (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, params.length, extraData);
 
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_CURRENCY1);
+        assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY1);
     }
 
     function test_mint_struct_verifier_invalid_owner(
@@ -150,25 +128,21 @@ contract TestUniswapV4MintStructVerifier is Test, IModifier {
         address _invalidOwner,
         uint256 _dirt
     ) public {
-        vm.assume(_invalidOwner != avatar());
-        /* ------------------------------------------------------------ *
-         *  build Mint params exactly as the hook/condition expects     *
-         * ------------------------------------------------------------ */
+        // Ensure the invalid owner is different from the avatar
+        assumeInvalidRecipient(_invalidOwner, avatar());
+
+        // Build Mint params
         bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, _invalidOwner, "test").dirtyBytes(_dirt);
 
+        // Generate extraData from both currencies
+        bytes12 extraData = TestingUtils.generateExtraData(_config.poolKey.currency0, _config.poolKey.currency1);
+
+        // Create mockERC721 for the check
         MockERC721 mockERC721 = new MockERC721(address(this));
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
-        bytes6 t0 = Lib.tokenHeader(_config.poolKey.currency0);
-        bytes6 t1 = Lib.tokenHeader(_config.poolKey.currency1);
-
-        // pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
-
         (bool ok, bytes32 reason) = verifier.check(address(mockERC721), 1, params, 0, 0, params.length, extraData);
 
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_OWNER);
+        assertInvalidCheck(ok, reason, Lib.INVALID_OWNER);
     }
 }

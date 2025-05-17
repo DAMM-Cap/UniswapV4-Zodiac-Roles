@@ -7,9 +7,9 @@ import {console2} from "@forge-std/console2.sol";
 import {Lib} from "@src/Lib.sol";
 import {Currency} from "@univ4-core/src/types/Currency.sol";
 import {CalldataDecoder} from "@univ4-periphery/src/libraries/CalldataDecoder.sol";
-import "./TestingUtils.sol";
+import {TestingUtils, TestUtils} from "./TestingUtils.sol";
 
-contract TestUniswapV4SettlePairStructVerifier is Test {
+contract TestUniswapV4SettlePairStructVerifier is TestUtils {
     using TestingUtils for bytes;
 
     UniswapV4SettlePairStructVerifier verifier;
@@ -23,19 +23,13 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
         bytes memory data = abi.encode(currency0, currency1).dirtyBytes(dirt);
 
         // Generate extraData from both currencies
-        bytes6 t0 = Lib.tokenHeader(currency0);
-        bytes6 t1 = Lib.tokenHeader(currency1);
-
-        // Pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
+        bytes12 extraData = TestingUtils.generateExtraData(currency0, currency1);
 
         // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), data, extraData);
 
         // Verify the results
-        assertTrue(ok);
-        assertEq(reason, bytes32(0));
+        assertValidCheck(ok, reason);
     }
 
     function test_settle_pair_invalid_currency0(
@@ -56,18 +50,13 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
         bytes memory data = abi.encode(invalidCurrency0, validCurrency1).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
-        bytes6 t1 = Lib.tokenHeader(validCurrency1);
-
-        // Pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(validHeader0))) << 48) | uint96(uint48(bytes6(t1)));
-        bytes12 extraData = bytes12(packed);
+        bytes12 extraData = TestingUtils.generateExtraData(validCurrency0, validCurrency1);
 
         // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), data, extraData);
 
         // Verify the results
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_CURRENCY0);
+        assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY0);
     }
 
     function test_settle_pair_invalid_currency1(
@@ -88,18 +77,13 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
         bytes memory data = abi.encode(validCurrency0, invalidCurrency1).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
-        bytes6 t0 = Lib.tokenHeader(validCurrency0);
-
-        // Pack the two 48-bit slices into a single 96-bit value
-        uint96 packed = (uint96(uint48(bytes6(t0))) << 48) | uint96(uint48(bytes6(validHeader1)));
-        bytes12 extraData = bytes12(packed);
+        bytes12 extraData = TestingUtils.generateExtraData(validCurrency0, validCurrency1);
 
         // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), data, extraData);
 
         // Verify the results
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_CURRENCY1);
+        assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY1);
     }
 
     function test_settle_pair_invalid_both_currencies(
@@ -126,14 +110,12 @@ contract TestUniswapV4SettlePairStructVerifier is Test {
         bytes memory data = abi.encode(invalidCurrency0, invalidCurrency1).dirtyBytes(dirt);
 
         // Generate extraData from the valid currencies
-        uint96 packed = (uint96(uint48(bytes6(validHeader0))) << 48) | uint96(uint48(bytes6(validHeader1)));
-        bytes12 extraData = bytes12(packed);
+        bytes12 extraData = TestingUtils.generateExtraData(validCurrency0, validCurrency1);
 
         // Call the check function
-        (bool ok, bytes32 reason) = verifier.check(address(0), 0, data, 0, 0, data.length, extraData);
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), data, extraData);
 
-        // Verify the results
-        assertFalse(ok);
-        assertEq(reason, Lib.INVALID_CURRENCY0); // The first check that fails determines the error
+        // Verify the results - should fail on the first check (currency0)
+        assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY0);
     }
 }

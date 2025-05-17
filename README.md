@@ -1,17 +1,45 @@
+
 # UniswapV4 Zodiac Permission Helpers
 
-  UniswapV4MintStructVerifier deployed at: 0xd253416F9D3a6D4E29b72c06a5a698B2b4101B5B
-  
-  UniswapV4TakeAllStructVerifier deployed at: 0x748a65Fa4A2a8C190C72Ea19C661551b8Ac2A3d2
-  
-  UniswapV4SettleAllStructVerifier deployed at: 0x638041329BD902666bb07a6fb346a95FCb944faA
-  
-  UniswapV4SwapExactInSingleStructVerifier deployed at: 0xf7E322ED82D44176720EF3046d24CdF532b51F59
-  
-  UniswapV4SweepStructVerifier deployed at: 0x7929C940Aa494837B48819d82055892526F60842
-  
-  UniswapV4TakePairStructVerifier deployed at: 0x30B1A18740490Eef559c80fa5e1ca320093b4e4b
-  
-  UniswapV4DecreaseLiquidityStructVerifier deployed at: 0x888ac23dDe388CA9Bb0692Fd52ebe2dD66a4C5e7
-  
-  UniswapV4SettlePairStructVerifier deployed at: 0x1479C4209aB6DaB47C375BAA4Bd450780206B03a
+Custom verification contracts for Zodiac Roles V2 (v2.1) that enable precise permission control for Uniswap V4 interactions.
+
+## Overview
+
+These contracts solve specific limitations in the current Zodiac Roles implementation that prevented proper handling of Uniswap V4 permissions. The implementation was not possible using the zodiac js SDK due to these limitations. These verifier contracts function as calldata struct decoders to enable fine-grained transaction verification.
+
+## Usage
+
+Run tests with:
+```
+forge test --via-ir
+```
+
+## Technical Caveats [IMPORTANT]
+
+### Calldata Offset
+
+Verifiers offset calldata inputs by 0x20 (one word) to skip the bytes array length field. This is necessary because Zodiac passes encoded structs as bytes arrays rather than direct ABI-encoded structs.
+
+In our testing framework:
+- "Dirty" refers to the bytes array with length
+- "Clean" refers to the data with the first word trimmed
+
+### Token Key System
+
+The `extraData` field passes metadata to Zodiac verifiers as a key identifying the token pair:
+- Format: `bytes12` defined by `abi.encodePacked(token0.head(6), token1.head(6))`
+- Note: This key system has potential for collisions
+- Security: Safe as long as the underlying Gnosis Safe has only pre-approved trusted tokens to the permit2, universal router, and position manager
+
+## Deployments
+
+### Arbitrum
+Refer to `/broadcast/DeployVerifiers.s.sol/42161/run-latest.json`
+
+## Audits
+None completed yet
+
+## License
+MIT
+
+Developed by DAMM Capital team
