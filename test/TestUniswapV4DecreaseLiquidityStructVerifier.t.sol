@@ -9,7 +9,7 @@ import {console2} from "@forge-std/console2.sol";
 import {Lib} from "@src/Lib.sol";
 import {TestingUtils, TestUtils} from "./TestingUtils.sol";
 
-/* ─────────────────────────── mock ERC-721 ────────────────────── */
+// mock ERC-721
 contract MockERC721 {
     mapping(uint256 => address) public owners;
 

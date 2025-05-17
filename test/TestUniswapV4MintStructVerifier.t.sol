@@ -11,8 +11,7 @@ import {TestingUtils, TestUtils} from "./TestingUtils.sol";
 import {PoolKey} from "@univ4-core/src/types/PoolKey.sol";
 import {Currency} from "@univ4-core/src/types/Currency.sol"; // value-type alias --> unwrap gives address
 
-/* ─────────────────────────── mock ERC-721 ────────────────────── */
-
+// mock ERC-721
 contract MockERC721 {
     address public owner;
 
@@ -28,7 +27,7 @@ contract MockERC721 {
 contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
     using TestingUtils for bytes;
 
-    /* ─────────── stubs to satisfy IModifier ─────────── */
+    // stubs to satisfy IModifier
     function avatar() public view returns (address) {
         return address(this);
     }
@@ -37,7 +36,7 @@ contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
         return address(this);
     }
 
-    /* ─────────── struct used by PoolManager.mint() ─────────── */
+    // struct used by PoolManager.mint()
     struct PositionConfig {
         PoolKey poolKey;
         int24 tickLower;
@@ -53,9 +52,7 @@ contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
         bytes calldata _hookData,
         uint256 _dirt
     ) public {
-        /* ------------------------------------------------------------ *
-         *  build Mint params exactly as the hook/condition expects     *
-         * ------------------------------------------------------------ */
+        // Build Mint params for the hook/condition
         bytes memory params = abi.encode(
             _config.poolKey,
             _config.tickLower,
@@ -65,15 +62,12 @@ contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
             _amount1Max,
             avatar(),
             _hookData
-        ) // owner
-            .dirtyBytes(_dirt);
+        ).dirtyBytes(_dirt);
 
         // Generate extraData from both currencies
         bytes12 extraData = TestingUtils.generateExtraData(_config.poolKey.currency0, _config.poolKey.currency1);
 
-        /* ------------------------------------------------------------ *
-         *  run the check                                               *
-         * ------------------------------------------------------------ */
+        // Run the check
         MockERC721 mockERC721 = new MockERC721(_erc721Owner);
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
@@ -88,11 +82,8 @@ contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
         Currency _invalidCurrency,
         uint256 _dirt
     ) public {
-        /* ------------------------------------------------------------ *
-         *  build Mint params exactly as the hook/condition expects     *
-         * ------------------------------------------------------------ */
-        bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, avatar(), "test") // owner
-            .dirtyBytes(_dirt);
+        // Build Mint params
+        bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, avatar(), "test").dirtyBytes(_dirt);
 
         // Ensure the invalid currency is different from the valid one
         assumeInvalidCurrencySingle(_invalidCurrency, _config.poolKey.currency0);
@@ -100,7 +91,7 @@ contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
         // Create extraData with the invalid currency
         bytes12 extraData = TestingUtils.generateExtraData(_invalidCurrency, _config.poolKey.currency1);
 
-        // In this test we needed to create a mockERC721 for the check to work properly
+        // Create mockERC721 for the check
         MockERC721 mockERC721 = new MockERC721(address(this));
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
@@ -114,11 +105,8 @@ contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
         Currency _invalidCurrency,
         uint256 _dirt
     ) public {
-        /* ------------------------------------------------------------ *
-         *  build Mint params exactly as the hook/condition expects     *
-         * ------------------------------------------------------------ */
-        bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, avatar(), "test") // owner
-            .dirtyBytes(_dirt);
+        // Build Mint params
+        bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, avatar(), "test").dirtyBytes(_dirt);
 
         // Ensure the invalid currency is different from the valid one
         assumeInvalidCurrencySingle(_invalidCurrency, _config.poolKey.currency1);
@@ -126,7 +114,7 @@ contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
         // Create extraData with the invalid currency
         bytes12 extraData = TestingUtils.generateExtraData(_config.poolKey.currency0, _invalidCurrency);
 
-        // In this test we needed to create a mockERC721 for the check to work properly
+        // Create mockERC721 for the check
         MockERC721 mockERC721 = new MockERC721(address(this));
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
@@ -143,15 +131,13 @@ contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
         // Ensure the invalid owner is different from the avatar
         assumeInvalidRecipient(_invalidOwner, avatar());
 
-        /* ------------------------------------------------------------ *
-         *  build Mint params exactly as the hook/condition expects     *
-         * ------------------------------------------------------------ */
+        // Build Mint params
         bytes memory params = abi.encode(_config.poolKey, 0, 0, 0, 0, 0, _invalidOwner, "test").dirtyBytes(_dirt);
 
         // Generate extraData from both currencies
         bytes12 extraData = TestingUtils.generateExtraData(_config.poolKey.currency0, _config.poolKey.currency1);
 
-        // In this test we needed to create a mockERC721 for the check to work properly
+        // Create mockERC721 for the check
         MockERC721 mockERC721 = new MockERC721(address(this));
         UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier();
 
