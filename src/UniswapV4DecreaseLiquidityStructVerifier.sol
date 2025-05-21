@@ -10,12 +10,11 @@ interface IERC721 {
     function ownerOf(uint256 tokenId) external view returns (address owner);
 }
 
+/// @author DAMM Capital - https://dammcap.finance
 contract UniswapV4DecreaseLiquidityStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 
-    /// @notice extraData in combination with token approvals to the position manager
-    /// garuantees that only pre-approved tokens can be used to provide liquidity
     function check(
         address to,
         uint256,

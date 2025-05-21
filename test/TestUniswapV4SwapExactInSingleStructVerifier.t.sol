@@ -43,7 +43,8 @@ contract TestUniswapV4SwapExactInSingleStructVerifier is TestUtils {
         bytes memory payload = abi.encode(mockExactInputParams).dirtyBytes(dirt);
 
         // Call the check function
-        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), payload, extraData);
+        uint256 value = currency0.isAddressZero() ? 1000 : 0;
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), payload, extraData, value);
 
         // Verify the results
         assertValidCheck(ok, reason);
@@ -64,5 +65,32 @@ contract TestUniswapV4SwapExactInSingleStructVerifier is TestUtils {
 
         // Verify the results
         assertValidCheck(ok, reason);
+    }
+
+    function test_swap_exact_in_single_currency0_is_address_zero_value_check() public {
+        // currency0 is zero address
+        Currency currency0 = Currency.wrap(address(0));
+        Currency currency1 = Currency.wrap(address(0x1234));
+        uint128 amountIn = 1234;
+        uint128 amountOutMinimum = 567;
+        PoolKey memory poolKey =
+            PoolKey({currency0: currency0, currency1: currency1, fee: 8, tickSpacing: 1, hooks: IHooks(address(0))});
+        IV4Router.ExactInputSingleParams memory params = IV4Router.ExactInputSingleParams({
+            poolKey: poolKey,
+            zeroForOne: true,
+            amountIn: amountIn,
+            amountOutMinimum: amountOutMinimum,
+            hookData: bytes("")
+        });
+        bytes memory payload = abi.encode(params).dirtyBytes(0);
+        bytes12 extraData = TestingUtils.generateExtraData(currency0, currency1);
+
+        // Should pass when value == amountIn
+        (bool ok, bytes32 reason) = verifier.check(address(0), amountIn, payload, 0, 0, payload.length, extraData);
+        assertValidCheck(ok, reason);
+
+        // Should fail when value != amountIn
+        (ok, reason) = verifier.check(address(0), amountIn + 1, payload, 0, 0, payload.length, extraData);
+        assertInvalidCheck(ok, reason, Lib.INVALID_VALUE);
     }
 }
