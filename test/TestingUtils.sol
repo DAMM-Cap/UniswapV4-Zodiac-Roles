@@ -76,12 +76,20 @@ abstract contract TestUtils is Test {
         vm.assume(invalidRecipient != address(0));
     }
 
+    function callVerifierCheck(address verifier, bytes memory data, bytes12 extraData, uint256 value)
+        internal
+        view
+        returns (bool ok, bytes32 reason)
+    {
+        (ok, reason) = ICustomCondition(verifier).check(address(0), value, data, 0, 0, data.length, extraData);
+    }
+
     function callVerifierCheck(address verifier, bytes memory data, bytes12 extraData)
         internal
         view
         returns (bool ok, bytes32 reason)
     {
-        (ok, reason) = ICustomCondition(verifier).check(address(0), 0, data, 0, 0, data.length, extraData);
+        (ok, reason) = callVerifierCheck(verifier, data, extraData, 0);
     }
 
     function callVerifierCheck(

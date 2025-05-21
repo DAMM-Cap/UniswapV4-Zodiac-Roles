@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@univ4-core/src/types/PoolKey.sol";
 
+/// @author DAMM Capital - https://dammcap.finance
 library Lib {
     /// 0x534d0a748652e5f56e4f1a8c9a5a4b8f77782b58576f9f6f572df5cdc7c297c3
     bytes32 constant INVALID_CURRENCY0 = keccak256("INVALID_CURRENCY0");
@@ -16,6 +17,8 @@ library Lib {
     bytes32 constant INVALID_RECIPIENT = keccak256("INVALID_RECIPIENT");
     /// 0x806fc2f0c528614f6371ca4d5621d8076cd90c51a2211198fdc62e3aba768436
     bytes32 constant INVALID_TOKEN_ID = keccak256("INVALID_TOKEN_ID");
+    /// 0xf38185948b9759248e56ec02128912506b4a23870d442e59ae3f857bcd81896c
+    bytes32 constant INVALID_VALUE = keccak256("INVALID_VALUE");
 
     uint256 constant ARRAY_LENGTH_OFFSET = 0x20;
 

@@ -6,12 +6,11 @@ import {ICustomCondition} from "./interfaces/ICustomCondition.sol";
 import {IModifier} from "./interfaces/IModifier.sol";
 import "./Lib.sol";
 
+/// @author DAMM Capital - https://dammcap.finance
 contract UniswapV4TakePairStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 
-    /// @notice extraData in combination with token approvals to the position manager
-    /// garuantees that only pre-approved tokens can be used to provide liquidity
     function check(
         address,
         uint256,
