@@ -15,6 +15,14 @@ contract UniswapV4DecreaseLiquidityStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 
+    function decode(bytes calldata input, uint256 location, uint256 size)
+        public
+        view
+        returns (uint256 tokenId, uint256 liquidity, uint128 amount0Min, uint128 amount1Min, bytes memory hookData)
+    {
+        return bytes(input[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeModifyLiquidityParams();
+    }
+
     function check(
         address to,
         uint256,
@@ -24,11 +32,15 @@ contract UniswapV4DecreaseLiquidityStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        (uint256 tokenId, uint256 liquidity, uint128 amount0Min, uint128 amount1Min, bytes calldata hookData) =
-            bytes(data[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeModifyLiquidityParams();
-        /// check if tokenId is owned by avatar using ERC721
-        if (IERC721(to).ownerOf(tokenId) != IModifier(msg.sender).avatar()) {
-            return (false, Lib.INVALID_TOKEN_ID);
+        try this.decode(data, location, size) returns (
+            uint256 tokenId, uint256 liquidity, uint128 amount0Min, uint128 amount1Min, bytes memory hookData
+        ) {
+            /// check if tokenId is owned by avatar using ERC721
+            if (IERC721(to).ownerOf(tokenId) != IModifier(msg.sender).avatar()) {
+                return (false, Lib.INVALID_TOKEN_ID);
+            }
+        } catch {
+            return (false, Lib.INVALID_ENCODING);
         }
 
         return (true, 0);

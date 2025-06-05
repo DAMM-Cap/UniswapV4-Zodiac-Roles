@@ -10,6 +10,14 @@ contract UniswapV4TakeAllStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 
+    function decode(bytes calldata input, uint256 location, uint256 size)
+        public
+        view
+        returns (Currency currency, uint256 minAmount)
+    {
+        return bytes(input[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeCurrencyAndUint256();
+    }
+
     function check(
         address,
         uint256,
@@ -19,11 +27,12 @@ contract UniswapV4TakeAllStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        (Currency currency, uint256 minAmount) =
-            bytes(data[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeCurrencyAndUint256();
-
-        if (!currency.checkCurrency0Or1(extraData)) {
-            return (false, Lib.INVALID_CURRENCY);
+        try this.decode(data, location, size) returns (Currency currency, uint256 minAmount) {
+            if (!currency.checkCurrency0Or1(extraData)) {
+                return (false, Lib.INVALID_CURRENCY);
+            }
+        } catch {
+            return (false, Lib.INVALID_ENCODING);
         }
 
         return (true, 0);

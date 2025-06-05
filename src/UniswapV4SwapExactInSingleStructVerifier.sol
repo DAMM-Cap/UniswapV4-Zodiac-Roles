@@ -11,6 +11,14 @@ contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 
+    function decode(bytes calldata input, uint256 location, uint256 size)
+        public
+        view
+        returns (IV4Router.ExactInputSingleParams memory swapParams)
+    {
+        return bytes(input[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeSwapExactInSingleParams();
+    }
+
     function check(
         address,
         uint256 value,
@@ -20,21 +28,22 @@ contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        (IV4Router.ExactInputSingleParams calldata swapParams) =
-            bytes(data[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeSwapExactInSingleParams();
-
-        if (!swapParams.poolKey.currency0.checkCurrency0(extraData)) {
-            return (false, Lib.INVALID_CURRENCY0);
-        }
-
-        if (!swapParams.poolKey.currency1.checkCurrency1(extraData)) {
-            return (false, Lib.INVALID_CURRENCY1);
-        }
-
-        if (swapParams.poolKey.currency0.isAddressZero()) {
-            if (value != swapParams.amountIn) {
-                return (false, Lib.INVALID_VALUE);
+        try this.decode(data, location, size) returns (IV4Router.ExactInputSingleParams memory swapParams) {
+            if (!swapParams.poolKey.currency0.checkCurrency0(extraData)) {
+                return (false, Lib.INVALID_CURRENCY0);
             }
+
+            if (!swapParams.poolKey.currency1.checkCurrency1(extraData)) {
+                return (false, Lib.INVALID_CURRENCY1);
+            }
+
+            if (swapParams.poolKey.currency0.isAddressZero()) {
+                if (value != swapParams.amountIn) {
+                    return (false, Lib.INVALID_VALUE);
+                }
+            }
+        } catch {
+            return (false, Lib.INVALID_ENCODING);
         }
 
         return (true, 0);

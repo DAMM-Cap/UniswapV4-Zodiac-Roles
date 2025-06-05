@@ -11,6 +11,14 @@ contract UniswapV4SweepStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 
+    function decode(bytes calldata input, uint256 location, uint256 size)
+        public
+        view
+        returns (Currency currency, address sweepTo)
+    {
+        return bytes(input[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeCurrencyAndAddress();
+    }
+
     function check(
         address,
         uint256,
@@ -20,15 +28,16 @@ contract UniswapV4SweepStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        (Currency currency, address sweepTo) =
-            bytes(data[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeCurrencyAndAddress();
+        try this.decode(data, location, size) returns (Currency currency, address sweepTo) {
+            if (!currency.checkCurrency0Or1(extraData)) {
+                return (false, Lib.INVALID_CURRENCY);
+            }
 
-        if (!currency.checkCurrency0Or1(extraData)) {
-            return (false, Lib.INVALID_CURRENCY);
-        }
-
-        if (sweepTo != IModifier(msg.sender).avatar()) {
-            return (false, Lib.INVALID_RECIPIENT);
+            if (sweepTo != IModifier(msg.sender).avatar()) {
+                return (false, Lib.INVALID_RECIPIENT);
+            }
+        } catch {
+            return (false, Lib.INVALID_ENCODING);
         }
 
         return (true, 0);
