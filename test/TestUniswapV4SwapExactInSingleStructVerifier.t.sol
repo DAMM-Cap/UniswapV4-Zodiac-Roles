@@ -18,7 +18,7 @@ contract TestUniswapV4SwapExactInSingleStructVerifier is TestUtils {
     UniswapV4SwapExactInSingleStructVerifier verifier;
 
     function setUp() public {
-        verifier = new UniswapV4SwapExactInSingleStructVerifier();
+        verifier = new UniswapV4SwapExactInSingleStructVerifier(10_000);
     }
 
     function test_swap_exact_in_single_valid_currencies(Currency currency0, Currency currency1, uint256 dirt) public {
@@ -48,6 +48,47 @@ contract TestUniswapV4SwapExactInSingleStructVerifier is TestUtils {
 
         // Verify the results
         assertValidCheck(ok, reason);
+    }
+
+    function test_swap_exact_in_single_invalid_fee(Currency currency0, Currency currency1, uint24 fee, uint256 dirt)
+        public
+    {
+        vm.assume(Currency.unwrap(currency0) != Currency.unwrap(currency1));
+        vm.assume(Currency.unwrap(currency0) < Currency.unwrap(currency1));
+
+        vm.assume(fee > 0);
+        vm.assume(fee < 10_000);
+
+        verifier = new UniswapV4SwapExactInSingleStructVerifier(fee);
+
+        // Create a pool key with the currencies
+        PoolKey memory poolKey = PoolKey({
+            currency0: currency0,
+            currency1: currency1,
+            fee: fee + 1,
+            tickSpacing: 1,
+            hooks: IHooks(address(0))
+        });
+
+        IV4Router.ExactInputSingleParams memory mockExactInputParams = IV4Router.ExactInputSingleParams({
+            poolKey: poolKey,
+            zeroForOne: true,
+            amountIn: 1000,
+            amountOutMinimum: 500,
+            hookData: bytes("")
+        });
+
+        bytes memory payload = abi.encode(mockExactInputParams).dirtyBytes(dirt);
+
+        // Generate extraData from the same currencies
+        bytes12 extraData = TestingUtils.generateExtraData(currency0, currency1);
+
+        // Call the check function
+        uint256 value = currency0.isAddressZero() ? 1000 : 0;
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), payload, extraData, value);
+
+        // Verify the results
+        assertInvalidCheck(ok, reason, Lib.INVALID_FEE);
     }
 
     function test_swap_exact_in_single_valid_currencies_exact() public {

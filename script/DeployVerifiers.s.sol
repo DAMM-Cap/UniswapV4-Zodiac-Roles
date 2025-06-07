@@ -12,6 +12,8 @@ import "../src/UniswapV4DecreaseLiquidityStructVerifier.sol";
 import "../src/UniswapV4SettlePairStructVerifier.sol";
 
 contract DeployVerifiers is Script {
+    uint24 public constant MAX_FEE = 10_000;
+
     function run() external {
         // Load the private key from environment
         uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PK");
@@ -20,7 +22,7 @@ contract DeployVerifiers is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy all the verifier contracts
-        UniswapV4MintStructVerifier mintVerifier = new UniswapV4MintStructVerifier();
+        UniswapV4MintStructVerifier mintVerifier = new UniswapV4MintStructVerifier(MAX_FEE);
         console.log("UniswapV4MintStructVerifier deployed at:", address(mintVerifier));
 
         UniswapV4TakeAllStructVerifier takeAllVerifier = new UniswapV4TakeAllStructVerifier();
@@ -30,7 +32,7 @@ contract DeployVerifiers is Script {
         console.log("UniswapV4SettleAllStructVerifier deployed at:", address(settleAllVerifier));
 
         UniswapV4SwapExactInSingleStructVerifier swapExactInSingleVerifier =
-            new UniswapV4SwapExactInSingleStructVerifier();
+            new UniswapV4SwapExactInSingleStructVerifier(MAX_FEE);
         console.log("UniswapV4SwapExactInSingleStructVerifier deployed at:", address(swapExactInSingleVerifier));
 
         UniswapV4SweepStructVerifier sweepVerifier = new UniswapV4SweepStructVerifier();

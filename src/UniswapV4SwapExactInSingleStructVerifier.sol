@@ -11,6 +11,12 @@ contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 
+    uint24 public immutable maxFee;
+
+    constructor(uint24 _maxFee) {
+        maxFee = _maxFee;
+    }
+
     function decode(bytes calldata input, uint256 location, uint256 size)
         public
         view
@@ -41,6 +47,10 @@ contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
                 if (value != swapParams.amountIn) {
                     return (false, Lib.INVALID_VALUE);
                 }
+            }
+
+            if (swapParams.poolKey.fee > maxFee) {
+                return (false, Lib.INVALID_FEE);
             }
         } catch {
             return (false, Lib.INVALID_ENCODING);
