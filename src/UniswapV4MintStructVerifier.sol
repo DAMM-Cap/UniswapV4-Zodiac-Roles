@@ -11,6 +11,12 @@ contract UniswapV4MintStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 
+    uint24 public immutable maxFee;
+
+    constructor(uint24 _maxFee) {
+        maxFee = _maxFee;
+    }
+
     function decode(bytes calldata input, uint256 location, uint256 size)
         public
         view
@@ -53,6 +59,10 @@ contract UniswapV4MintStructVerifier is ICustomCondition {
 
             if (!poolKey.currency1.checkCurrency1(extraData)) {
                 return (false, Lib.INVALID_CURRENCY1);
+            }
+
+            if (poolKey.fee > maxFee) {
+                return (false, Lib.INVALID_FEE);
             }
 
             if (owner != IModifier(msg.sender).avatar()) {

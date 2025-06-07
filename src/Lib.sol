@@ -29,6 +29,9 @@ library Lib {
     /// cast keccak256 INVALID_ENCODING
     /// 0x34ff774802cb568045ddefa5bc82bb9f8edd62e67661592f4e7ad8ab46613191
     bytes32 constant INVALID_ENCODING = keccak256("INVALID_ENCODING");
+    /// cast keccak256 INVALID_FEE
+    /// 0x73a451b0afe1650aff547a5ca0b9a826db5ee3ae69b8673d90d6a22066d2d444
+    bytes32 constant INVALID_FEE = keccak256("INVALID_FEE");
 
     uint256 constant ARRAY_LENGTH_OFFSET = 0x20;
 
