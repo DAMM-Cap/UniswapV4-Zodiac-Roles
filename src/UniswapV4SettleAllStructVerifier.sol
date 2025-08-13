@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {CalldataDecoder} from "@univ4-periphery/src/libraries/CalldataDecoder.sol";
 import {ICustomCondition} from "./interfaces/ICustomCondition.sol";
-import {console2} from "@forge-std/console2.sol";
 import "./Lib.sol";
 
 /// @author DAMM Capital - https://dammcap.finance
