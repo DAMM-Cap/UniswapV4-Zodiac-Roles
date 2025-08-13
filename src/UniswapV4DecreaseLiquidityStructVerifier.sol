@@ -32,8 +32,8 @@ contract UniswapV4DecreaseLiquidityStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        /// check that size is at least 192 bytes
-        if (size < 0xC0) return (false, Lib.INVALID_ENCODING);
+        /// check that size is at least 224 bytes
+        if (size < 0xE0) return (false, Lib.INVALID_ENCODING);
 
         try this.decode(data, location, size) returns (
             uint256 tokenId, uint256 liquidity, uint128 amount0Min, uint128 amount1Min, bytes memory hookData
