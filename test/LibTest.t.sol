@@ -7,6 +7,17 @@ import {console2} from "@forge-std/console2.sol";
 import {Test} from "@forge-std/Test.sol";
 
 contract LibTest is Test {
+    function test_token_header() external pure {
+        Currency currency0 = Currency.wrap(0x04F9f4D4Ae73B29DC615B4bAf22E62D8FF3607E0);
+        Currency currency1 = Currency.wrap(0xF0c0Cf3F9586299A0482e9F99355F098EE245e42);
+
+        bytes6 header0 = Lib.tokenHeader(currency0);
+        bytes6 header1 = Lib.tokenHeader(currency1);
+
+        assertTrue(bytes6(0xf8b842dd5f19) == header0);
+        assertTrue(bytes6(0x10156f8b1749) == header1);
+    }
+
     function test_check_currency0(Currency currency0, Currency currency1) external pure {
         bytes6 t0 = Lib.tokenHeader(currency0);
         bytes6 t1 = Lib.tokenHeader(currency1);

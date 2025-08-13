@@ -35,8 +35,10 @@ library Lib {
 
     uint256 constant ARRAY_LENGTH_OFFSET = 0x20;
 
+    /// @dev We use the first 6 bytes of the address hash to avoid collisions
+    /// Collisions are possible, but extremely unlikely
     function tokenHeader(Currency currency) internal pure returns (bytes6) {
-        return bytes6(bytes20(Currency.unwrap(currency)));
+        return bytes6(keccak256(abi.encodePacked(Currency.unwrap(currency))));
     }
 
     /// @dev `extraData` == abi.encodePacked(token0.header(6), token1.header(6))
