@@ -28,6 +28,9 @@ contract UniswapV4SweepStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
+        /// check that size is exactly 60 bytes
+        if (size != 0x60) return (false, Lib.INVALID_ENCODING);
+
         try this.decode(data, location, size) returns (Currency currency, address sweepTo) {
             if (!currency.checkCurrency0Or1(extraData)) {
                 return (false, Lib.INVALID_CURRENCY);

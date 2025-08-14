@@ -169,4 +169,14 @@ contract TestUniswapV4MintStructVerifier is TestUtils, IModifier {
 
         assertInvalidCheck(ok, reason, Lib.INVALID_FEE);
     }
+
+    function test_mint_struct_verifier_invalid_size(PositionConfig calldata _config, bytes memory randomData) public {
+        vm.assume(randomData.length < 0x1C0);
+
+        UniswapV4MintStructVerifier verifier = new UniswapV4MintStructVerifier(1_00);
+
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), randomData, bytes12(0));
+
+        assertInvalidCheck(ok, reason, Lib.INVALID_ENCODING);
+    }
 }

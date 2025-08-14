@@ -18,7 +18,7 @@ contract TestUniswapV4SettleAllStructVerifier is TestUtils {
         verifier = new UniswapV4SettleAllStructVerifier();
     }
 
-    function test_settleall_struct_verifier_currency0(
+    function test_settle_all_struct_verifier_currency0(
         Currency currency0,
         Currency currency1,
         uint256 maxAmount,
@@ -37,7 +37,7 @@ contract TestUniswapV4SettleAllStructVerifier is TestUtils {
         assertValidCheck(ok, reason);
     }
 
-    function test_settleall_struct_verifier_currency1(
+    function test_settle_all_struct_verifier_currency1(
         Currency currency0,
         Currency currency1,
         uint256 maxAmount,
@@ -56,7 +56,7 @@ contract TestUniswapV4SettleAllStructVerifier is TestUtils {
         assertValidCheck(ok, reason);
     }
 
-    function test_settleall_struct_verifier_invalid_currency(
+    function test_settle_all_struct_verifier_invalid_currency(
         Currency currency0,
         Currency currency1,
         Currency invalidCurrency,
@@ -77,5 +77,14 @@ contract TestUniswapV4SettleAllStructVerifier is TestUtils {
 
         // Verify the results
         assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY);
+    }
+
+    function test_settle_all_struct_verifier_invalid_size(bytes memory randomData) public {
+        vm.assume(randomData.length != 0x60);
+        // Call the check function
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), randomData, bytes12(0));
+
+        // Verify the results
+        assertInvalidCheck(ok, reason, Lib.INVALID_ENCODING);
     }
 }

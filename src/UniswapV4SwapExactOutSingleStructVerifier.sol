@@ -34,6 +34,9 @@ contract UniswapV4SwapExactOutSingleStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
+        /// check that size is at least 352 bytes
+        if (size < 0x160) return (false, Lib.INVALID_ENCODING);
+
         try this.decode(data, location, size) returns (IV4Router.ExactOutputSingleParams memory swapParams) {
             if (!swapParams.poolKey.currency0.checkCurrency0(extraData)) {
                 return (false, Lib.INVALID_CURRENCY0);

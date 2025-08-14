@@ -134,4 +134,12 @@ contract TestUniswapV4SwapExactInSingleStructVerifier is TestUtils {
         (ok, reason) = verifier.check(address(0), amountIn + 1, payload, 0, 0, payload.length, extraData);
         assertInvalidCheck(ok, reason, Lib.INVALID_VALUE);
     }
+
+    function test_swap_exact_in_single_invalid_size(bytes memory randomData) public {
+        vm.assume(randomData.length < 0x160);
+
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), randomData, bytes12(0));
+
+        assertInvalidCheck(ok, reason, Lib.INVALID_ENCODING);
+    }
 }
