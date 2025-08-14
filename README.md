@@ -27,7 +27,7 @@ In our testing framework:
 ### Token Key System
 
 The `extraData` field passes metadata to Zodiac verifiers as a key identifying the token pair:
-- Format: `bytes12` defined by `abi.encodePacked(token0.head(6), token1.head(6))`
+- Format: `bytes12` defined by `abi.encodePacked(keccack256(token0).head(6), keccack256(token1).head(6))`
 - Note: This key system has potential for collisions
 - Security: Safe as long as the underlying Gnosis Safe has only pre-approved trusted tokens to the permit2, universal router, and position manager
 
