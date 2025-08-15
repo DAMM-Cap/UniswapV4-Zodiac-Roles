@@ -27,7 +27,7 @@ contract UniswapV4SettlePairStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
-        /// check that size is exactly 60 bytes
+        /// check that size is exactly 96 bytes
         if (size != 0x60) return (false, Lib.INVALID_ENCODING);
 
         try this.decode(data, location, size) returns (Currency currency0, Currency currency1) {
