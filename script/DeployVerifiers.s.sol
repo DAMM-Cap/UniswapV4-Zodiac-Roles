@@ -27,7 +27,8 @@ contract DeployVerifiers is Script {
         console.log("Using singleton factory:", USE_SINGLETON_FACTORY);
         console.log("Max fee:", MAX_FEE);
         console.log("Singleton factory:", SINGLETON_FACTORY);
-        console.log("Salt:", SALT);
+        console.log("Salt:");
+        console.logBytes32(SALT);
 
         if (USE_SINGLETON_FACTORY) {
             if (address(SINGLETON_FACTORY).code.length == 0) {
