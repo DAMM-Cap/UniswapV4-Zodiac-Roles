@@ -7,7 +7,7 @@ import {IV4Router} from "@univ4-periphery/src/interfaces/IV4Router.sol";
 import "./Lib.sol";
 
 /// @author DAMM Capital - https://dammcap.finance
-contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
+contract UniswapV4SwapExactOutSingleStructVerifier is ICustomCondition {
     using CalldataDecoder for bytes;
     using Lib for Currency;
 
@@ -20,9 +20,9 @@ contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
     function decode(bytes calldata input, uint256 location, uint256 size)
         public
         view
-        returns (IV4Router.ExactInputSingleParams memory swapParams)
+        returns (IV4Router.ExactOutputSingleParams memory swapParams)
     {
-        return bytes(input[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeSwapExactInSingleParams();
+        return bytes(input[location + Lib.ARRAY_LENGTH_OFFSET:location + size]).decodeSwapExactOutSingleParams();
     }
 
     function check(
@@ -37,7 +37,7 @@ contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
         /// check that size is at least 352 bytes
         if (size < 0x160) return (false, Lib.INVALID_ENCODING);
 
-        try this.decode(data, location, size) returns (IV4Router.ExactInputSingleParams memory swapParams) {
+        try this.decode(data, location, size) returns (IV4Router.ExactOutputSingleParams memory swapParams) {
             if (!swapParams.poolKey.currency0.checkCurrency0(extraData)) {
                 return (false, Lib.INVALID_CURRENCY0);
             }
@@ -47,7 +47,7 @@ contract UniswapV4SwapExactInSingleStructVerifier is ICustomCondition {
             }
 
             if (swapParams.zeroForOne && swapParams.poolKey.currency0.isAddressZero()) {
-                if (value != swapParams.amountIn) {
+                if (value != swapParams.amountInMaximum) {
                     return (false, Lib.INVALID_VALUE);
                 }
             }

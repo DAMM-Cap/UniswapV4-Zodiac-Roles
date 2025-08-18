@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {CalldataDecoder} from "@univ4-periphery/src/libraries/CalldataDecoder.sol";
 import {ICustomCondition} from "./interfaces/ICustomCondition.sol";
-import {console2} from "@forge-std/console2.sol";
 import "./Lib.sol";
 
 /// @author DAMM Capital - https://dammcap.finance
@@ -28,6 +27,9 @@ contract UniswapV4SettleAllStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
+        /// check that size is exactly 96 bytes
+        if (size != 0x60) return (false, Lib.INVALID_ENCODING);
+
         try this.decode(data, location, size) returns (Currency currency, uint256 maxAmount) {
             if (!currency.checkCurrency0Or1(extraData)) {
                 return (false, Lib.INVALID_CURRENCY);

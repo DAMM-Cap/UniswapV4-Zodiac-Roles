@@ -43,6 +43,9 @@ contract UniswapV4MintStructVerifier is ICustomCondition {
         uint256 size,
         bytes12 extraData
     ) external view returns (bool, bytes32) {
+        /// check that size is at least 448 bytes
+        if (size < 0x1C0) return (false, Lib.INVALID_ENCODING);
+
         try this.decode(data, location, size) returns (
             PoolKey memory poolKey,
             int24 tickLower,

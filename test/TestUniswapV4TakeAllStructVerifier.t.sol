@@ -78,4 +78,12 @@ contract TestUniswapV4TakeAllStructVerifier is TestUtils {
         // Verify the results
         assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY);
     }
+
+    function test_takeall_struct_verifier_invalid_size(bytes memory randomData) public {
+        vm.assume(randomData.length != 0x60);
+
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), randomData, bytes12(0));
+
+        assertInvalidCheck(ok, reason, Lib.INVALID_ENCODING);
+    }
 }

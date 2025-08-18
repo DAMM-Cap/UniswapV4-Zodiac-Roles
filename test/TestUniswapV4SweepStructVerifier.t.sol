@@ -143,4 +143,12 @@ contract TestUniswapV4SweepStructVerifier is TestUtils {
         // Verify the results - should fail on currency check first
         assertInvalidCheck(ok, reason, Lib.INVALID_CURRENCY);
     }
+
+    function test_sweep_pair_invalid_size(bytes memory randomData) public {
+        vm.assume(randomData.length != 0x60);
+
+        (bool ok, bytes32 reason) = callVerifierCheck(address(verifier), randomData, bytes12(0));
+
+        assertInvalidCheck(ok, reason, Lib.INVALID_ENCODING);
+    }
 }
